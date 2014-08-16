@@ -1,0 +1,2 @@
+SIS3100_INCLUDE = /home/florian/epics/sis1100-2.13-9/sis3100_calls
+SIS3100_LIB = /home/florian/epics/sis1100-2.13-9/sis3100_calls

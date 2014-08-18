@@ -1,0 +1,497 @@
+##################################################################
+# ###                                                        ### #
+# ### EPICS Database for                                     ### #
+# ###   ISEG VDS modules                                     ### #
+# ###                                                        ### #
+# ### author: F.Feldbauer                                    ### #
+# ###                                                        ### #
+# ### Ref 1.0; 2013-02-19                                    ### #
+# ###                                                        ### #
+# ### macros: subsys  PANDA subsystem      (e.g. FEMC)       ### #
+# ###         BUS     name of AsynPortDriver                 ### #
+# ###         dev     detector subtype     (e.g. APD)        ### #
+# ###         sector  sector inside subsys (e.g. Q1:X4:Y2:F) ### #
+# ###         channel channel number                         ### #
+##################################################################
+
+# ModuleStatus
+
+record (mbbiDirect, "PANDA:$(subsys):$(dev):HV:ModuleStatus") {
+  field (DTYP, "asynUInt32Digital")
+  field (INP,  "@asynMask($(BUS),0,0xffff,1)ModuleStatus")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isADJ") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B0 CP")
+  field (ZNAM, "Fine Adjustment inactive")
+  field (ONAM, "Fine Adjustment active")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isILKO") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B1 CP")
+  field (ZNAM, "InterlockOutput inactive")
+  field (ONAM, "InterlockOutput active")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isSTOP") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B2 CP")
+  field (ZNAM, "")
+  field (ONAM, "Module in STOP state")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isSRVC") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B4 CP")
+  field (ZNAM, "")
+  field (ONAM, "Factory Service Needed")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isIERR") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B5 CP")
+  field (ZNAM, "")
+  field (ONAM, "Input Error in module access")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isSPMD") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B6 CP")
+  field (ZNAM, "")
+  field (ONAM, "Module in Special mode")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isCCMPL") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B7 CP")
+  field (ZNAM, "")
+  field (ONAM, "All commands complete")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isnSERR") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B8 CP")
+  field (ZNAM, "Module has failure")
+  field (ONAM, "")
+  field (ZSV,  "MAJOR")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isnRMP") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.B9 CP")
+  field (ZNAM, "Channels stable")
+  field (ONAM, "Channels ramping")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isSFLPG") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.BA CP")
+  field (ZNAM, "Safety loop opened")
+  field (ONAM, "Safety loop closed")
+  field (ZSV,  "MAJOR")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isEVNTA") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.BB CP")
+  field (ZNAM, "")
+  field (ONAM, "Evnet is active and mask set")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isMODG") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.BC CP")
+  field (ZNAM, "")
+  field (ONAM, "Module in state good")
+  field (ZSV,  "MAJOR")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isSPLYG") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.BD CP")
+  field (ZNAM, "Power supply failure")
+  field (ONAM, "Power supply good")
+  field (ZSV,  "MAJOR")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isTMPG") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.BE CP")
+  field (ZNAM, "Temperature too high")
+  field (ONAM, "Temperature good")
+  field (ZSV,  "MAJOR")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleStatus:isKILE") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleStatus.BF CP")
+  field (ZNAM, "Kill disable")
+  field (ONAM, "Kill enable")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+# ModuleEventStatus
+
+record (mbbiDirect, "PANDA:$(subsys):$(dev):HV:ModuleEventStatus") {
+  field (DTYP, "asynUInt32Digital")
+  field (INP,  "@asynMask($(BUS),0,0xffff,1)ModuleEventStatus")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleEventStatus:ERSTA") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleEventStatus.B1 CP")
+  field (ZNAM, "")
+  field (ONAM, "Rest of HV after RestartTimerAfterRecallSetValues")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleEventStatus:ESRVC") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleEventStatus.B4 CP")
+  field (ZNAM, "")
+  field (ONAM, "Factory service needed")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleEventStatus:EIERR") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleEventStatus.B5 CP")
+  field (ZNAM, "")
+  field (ONAM, "Input Error in module access")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleEventStatus:ESFLPngd") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleEventStatus.BA CP")
+  field (ZNAM, "")
+  field (ONAM, "Safety loop open")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleEventStatus:ESPLYngd) {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleEventStatus.BD CP")
+  field (ZNAM, "")
+  field (ONAM, "Power supply failure")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:ModuleEventStatus:ETMPngd) {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:ModuleEventStatus.BE CP")
+  field (ZNAM, "")
+  field (ONAM, "Temperature too high")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+# ModuleEventMask
+
+record (mbboDirect, "PANDA:$(subsys):$(dev):HV:ModuleEventMask") {
+  field (DTYP, "asynUInt32Digital")
+  field (OUT,  "@asynMask($(BUS),0,0xffff,1)ModuleEventMask")
+}
+
+# ModuleControl
+
+record (mbboDirect, "PANDA:$(subsys):$(dev):HV:ModuleCtrl") {
+  field (DTYP, "asynUInt32Digital")
+  field (OUT,  "@asynMask($(BUS),0,0xffff,1)ModuleControl")
+}
+
+record ( bo, "PANDA:$(subsys):$(dev):HV:ModuleCtrl:Clear" ){
+  field( OUT,  "PANDA:$(subsys):$(dev):HV:ModuleCtrl.B6" )
+  field( FLNK, "PANDA:$(subsys):$(dev):HV:ModuleCtrl" )
+}
+
+# Voltage Ramp Speed
+
+record ( ao, "PANDA:$(subsys):$(dev):HV:VRAMP" ) {
+  field( DTYP, "asynFloat64" )
+  field( OUT,  "@asyn($(BUS),0,1)VoltageRampSpeed" )
+  field (DRVH, "20")
+  field (DRVL, "0")
+  field (PREC, "1")
+  field (EGU,  "%")
+}
+
+# Supply voltages
+
+record ( ai, "PANDA:$(subsys):$(dev):HV:SupplyP5" ) {
+  field (DTYP, "asynFloat64")
+  field (INP,  "@asyn($(BUS),0,1)SupplyP5")
+  # display parameters
+  field (EGU,  "V")
+  field (PREC, "2")
+  # alarm parameters
+  field (HIHI, "5.3")
+  field (HIGH, "5.2")
+  field (LOW,  "4.8")
+  field (LOLO, "4.7")
+  field (HHSV, "MAJOR")
+  field (HSV,  "MINOR")
+  field (LSV,  "MINOR")
+  field (LLSV, "MAJOR")
+  # thresholds
+  field (ADEL, "0.05")
+  field (MDEL, "0")
+}
+
+record ( ai, "PANDA:$(subsys):$(dev):HV:SupplyP12" ) {
+  field (DTYP, "asynFloat64")
+  field (INP,  "@asyn($(BUS),0,1)SupplyP12")
+  # display parameters
+  field (EGU,  "V")
+  field (PREC, "2")
+  # alarm parameters
+  field (HIHI, "12.3")
+  field (HIGH, "12.2")
+  field (LOW,  "11.8")
+  field (LOLO, "11.7")
+  field (HHSV, "MAJOR")
+  field (HSV,  "MINOR")
+  field (LSV,  "MINOR")
+  field (LLSV, "MAJOR")
+  # thresholds
+  field (ADEL, "0.05")
+  field (MDEL, "0")
+}
+
+record ( ai, "PANDA:$(subsys):$(dev):HV:SupplyN12" ) {
+  field (DTYP, "asynFloat64")
+  field (INP,  "@asyn($(BUS),0,1)SupplyN12")
+  # display parameters
+  field (EGU,  "V")
+  field (PREC, "2")
+  # alarm parameters
+  field (HIHI, "-11.7")
+  field (HIGH, "-11.8")
+  field (LOW,  "-12.2")
+  field (LOLO, "-12.3")
+  field (HHSV, "MAJOR")
+  field (HSV,  "MINOR")
+  field (LSV,  "MINOR")
+  field (LLSV, "MAJOR")
+  # thresholds
+  field (ADEL, "0.05")
+  field (MDEL, "0")
+}
+
+# Temperature
+
+record ( ai, "PANDA:$(subsys):$(dev):HV:Tmom" ) {
+  field (DTYP, "asynFloat64")
+  field (INP,  "@asyn($(BUS),0,1)Temperature")
+  # display parameters
+  field (EGU,  "degC")
+  field (PREC, "2")
+  # alarm parameters
+  field (HIHI, "54")
+  field (HIGH, "50")
+  field (HHSV, "MAJOR")
+  field (HSV,  "MINOR")
+  field (LSV,  "NO_ALARM")
+  field (LLSV, "NO_ALARM")
+  # thresholds
+  field (ADEL, "0.1")
+  field (MDEL, "0")
+}
+
+# Channel Status
+
+record (mbbiDirect, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus") {
+  field (DTYP, "asynUInt32Digital")
+  field (INP,  "@asynMask($(BUS),$(channel),0xffff,1)ChannelStatus")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isIERR") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.B2 CP")
+  field (ZNAM, "")
+  field (ONAM, "Input Error")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isON") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.B3 CP")
+  field (ZNAM, "Off")
+  field (ONAM, "On")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isRAMP") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.B4 CP")
+  field (ZNAM, "stable")
+  field (ONAM, "ramping")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isEMCY") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.B5 CP")
+  field (ZNAM, "")
+  field (ONAM, "Emergency off w/o ramp")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isCC") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.B6 CP")
+  field (ZNAM, "")
+  field (ONAM, "Current Control")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MINOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isCV") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.B7 CP")
+  field (ZNAM, "")
+  field (ONAM, "Voltage Control")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "NO_ALARM")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isCBNDs") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.BA CP")
+  field (ZNAM, "")
+  field (ONAM, "Current out of bounds")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isVBNDs") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.BB CP")
+  field (ZNAM, "")
+  field (ONAM, "Voltage out of bounds")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isEINH") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.BC CP")
+  field (ZNAM, "")
+  field (ONAM, "External Inhibit")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isTRIP") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.BD CP")
+  field (ZNAM, "")
+  field (ONAM, "Current Trip")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isCLIM") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.BE CP")
+  field (ZNAM, "")
+  field (ONAM, "Hardware current limit exceeded")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus:isVLIM") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelStatus.BF CP")
+  field (ZNAM, "")
+  field (ONAM, "Hardware voltage limit exceeded")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+# Channel Event Status
+
+record (mbbiDirect, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelEvtStatus") {
+  field (DTYP, "asynUInt32Digital")
+  field (INP,  "@asynMask($(BUS),$(channel),0xffff,1)ChannelEventStatus")
+}
+
+record (bi, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelEvtStatus:EIER") {
+  field (INP,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelEvtStatus.B2 CP")
+  field (ZNAM, "")
+  field (ONAM, "Input Error")
+  field (ZSV,  "NO_ALARM")
+  field (OSV,  "MAJOR")
+}
+
+# Channel Event Mask
+
+record (mbboDirect, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelEvtMask") {
+  field (DTYP, "asynUInt32Digital")
+  field (OUT,  "@asynMask($(BUS),$(channel),0xffff,1)ChannelEventMask")
+}
+
+# Channel Control
+
+record (mbboDirect, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelCtrl") {
+  field (DTYP, "asynUInt32Digital")
+  field (OUT,  "@asynMask($(BUS),$(channel),0xffff,1)ChannelControl")
+}
+
+record ( bo, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelCtrl:OnOff" ){
+  field( OUT,  "PANDA:$(subsys):$(dev):HV:$(sector):ChannelCtrl.B3" )
+  field( ZNAM, "Off" )
+  field( ONAM, "On" )
+  field( FLNK, "PANDA:$(subsys):$(dev):HV:$(sector):ChannelCtrl" )
+}
+
+# Voltage and Current measure
+
+record ( ai, "PANDA:$(subsys):$(dev):HV:$(sector):Vmom" ) {
+  field (DTYP, "asynFloat64")
+  field (INP,  "@asyn($(BUS),$(channel),1)VoltageMeasure")
+  # display parameters
+  field (EGU,  "V")
+  field (PREC, "2")
+  # thresholds
+  field (ADEL, "0.05")
+  field (MDEL, "0")
+}
+
+record ( ai, "PANDA:$(subsys):$(dev):HV:$(sector):Imom" ) {
+  field (DTYP, "asynFloat64")
+  field (INP,  "@asyn($(BUS),$(channel),1)CurrentMeasure")
+  # display parameters
+  field (EGU,  "uA")
+  field (PREC, "2")
+  # thresholds
+  field (ADEL, "0.5")
+  field (MDEL, "0")
+}
+
+# Voltage and Current set
+
+record ( ao, "PANDA:$(subsys):$(dev):HV:$(sector):Vset" ) {
+  field (DTYP, "asynFloat64")
+  field (OUT,  "@asyn($(BUS),$(channel),1)VoltageSet")
+  # display parameters
+  field (EGU,  "V")
+  field (PREC, "2")
+  # limits
+  field (DRVH, "8000")
+  field (DRVL, "0")
+
+}
+
+record ( ao, "PANDA:$(subsys):$(dev):HV:$(sector):Iset" ) {
+  field (DTYP, "asynFloat64")
+  field (OUT,  "@asyn($(BUS),$(channel),1)CurrentSet")
+  # display parameters
+  field (EGU,  "uA")
+  field (PREC, "2")
+  # limits
+  field (DRVH, "500")
+  field (DRVL, "0")
+}

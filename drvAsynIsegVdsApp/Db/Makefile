@@ -9,6 +9,7 @@ include $(TOP)/configure/CONFIG
 # Create and install (or just install)
 # databases, templates, substitutions like this
 DB += drvAsynIsegVds.db
+DB += iseg_vds.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------

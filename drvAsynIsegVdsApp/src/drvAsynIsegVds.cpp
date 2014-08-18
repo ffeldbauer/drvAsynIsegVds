@@ -193,7 +193,6 @@ asynStatus drvAsynIsegVds::readFloat64( asynUser *pasynUser, epicsFloat64 *value
   
   status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
 
-
   epicsUInt32 vmeData = 0;
   epicsUInt32 vmeAddr = base_;
   cmdIter it = modcmds_.find( function );
@@ -211,6 +210,9 @@ asynStatus drvAsynIsegVds::readFloat64( asynUser *pasynUser, epicsFloat64 *value
     return asynError;
   }
   float_t data; data.ival = vmeData;
+  // convert current from A to uA
+  if ( funciton == P_ChanImom || function == P_ChanIset ) data.fval *= 1.e6;
+
   status = setDoubleParam( addr, function, data.fval );
 
 
@@ -256,8 +258,9 @@ asynStatus drvAsynIsegVds::writeFloat64( asynUser *pasynUser, epicsFloat64 value
 
   status = getAddress( pasynUser, &addr ); if ( status != asynSuccess ) return status;
 
-
-  float_t vmeData; vmeData.fval = value;
+  float_t vmeData; vmeData.fval = (epicsFloat32)value;
+  // convert current from A to uA
+  if ( function == P_ChanIset ) vmeData.fval *= 1.e-6;
   epicsUInt32 vmeAddr = base_;
   cmdIter it = modcmds_.find( function );
   if( modcmds_.end() == it ) {

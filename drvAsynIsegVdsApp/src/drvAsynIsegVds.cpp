@@ -211,7 +211,7 @@ asynStatus drvAsynIsegVds::readFloat64( asynUser *pasynUser, epicsFloat64 *value
   }
   float_t data; data.ival = vmeData;
   // convert current from A to uA
-  if ( funciton == P_ChanImom || function == P_ChanIset ) data.fval *= 1.e6;
+  if ( function == P_ChanImom || function == P_ChanIset ) data.fval *= 1.e6;
 
   status = setDoubleParam( addr, function, data.fval );
 

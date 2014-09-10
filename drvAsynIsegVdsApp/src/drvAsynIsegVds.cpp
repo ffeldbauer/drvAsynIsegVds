@@ -277,7 +277,6 @@ asynStatus drvAsynIsegVds::writeFloat64( asynUser *pasynUser, epicsFloat64 value
     return asynError;
   }
 
-
   status = setDoubleParam( addr, function, value );
   status = (asynStatus)callParamCallbacks( addr, addr );
   if ( status ) 

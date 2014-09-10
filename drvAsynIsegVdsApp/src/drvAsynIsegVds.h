@@ -67,14 +67,14 @@ class drvAsynIsegVds : public asynPortDriver {
  public:
   drvAsynIsegVds( const char *portName, const char *vmedev, const int BA );
 
-  /* These are the methods that we override from asynPortDriver */
+  // These are the methods that we override from asynPortDriver
   virtual asynStatus readUInt32Digital( asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask );
   virtual asynStatus writeUInt32Digital( asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask );
   virtual asynStatus writeFloat64( asynUser *pasynUser, epicsFloat64 value );
   virtual asynStatus readFloat64( asynUser *pasynUser, epicsFloat64 *value );
 
  protected:
-  /* Values used for pasynUser->reason, and indexes into the parameter library. */
+  // Values used for pasynUser->reason, and indexes into the parameter library.
   int P_ModStatus;         //!< index of Parameter "ModuleStatus"
   int P_ModEvtStatus;      //!< index of Parameter "ModuleEventStatus"
   int P_ModEvtMask;        //!< index of Parameter "ModuleEventMask"

@@ -28,10 +28,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fcntl.h>
 #include <iostream>
-#include <sys/ioctl.h>
-#include <sis3100_vme_calls.h>
 
 // EPICS includes
 #include <epicsEvent.h>
@@ -50,6 +47,7 @@
 
 // local includes
 #include "drvAsynIsegVds.h"
+#include "VmeMaster.h"
 
 //_____ D E F I N I T I O N S __________________________________________________
 typedef  std::map<int, epicsUInt32>::const_iterator  cmdIter;
@@ -78,34 +76,38 @@ static const epicsUInt32 chanAddr[8] = { 0x0100, 0x0140, 0x0180, 0x01c0,
 //! @return  in case of no error occured asynSuccess is returned. Otherwise
 //!          asynError or asynTimeout is returned. A error message is stored
 //!          in pasynUser->errorMessage.
-//------------------------------_-----------------------------------------------
+//------------------------------------------------------------------------------
 asynStatus drvAsynIsegVds::readUInt32Digital( asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask ) {
+  static const char *functionName = "readUInt32Digital";
   int function = pasynUser->reason;
   int addr = 0;
+  epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
   asynStatus status = asynSuccess;
-  const char *functionName = "readUInt32Digital";
+  epicsUInt32 vmeData = 0;
+  epicsUInt32 vmeAddr = 0;
     
   status = getAddress( pasynUser, &addr ); if( status ) return status;
 
-  epicsUInt32 vmeData = 0;
-  epicsUInt32 vmeAddr = base_;
-  cmdIter it = modcmds_.find( function );
-  if( modcmds_.end() == it ) {
-    it = chancmds_.find( function );
-    if( chancmds_.end() == it ) return asynError;
+  cmdIter it = _modcmds.find( function );
+  if( _modcmds.end() == it ) {
+    it = _chancmds.find( function );
+    if( _chancmds.end() == it ) return asynError;
     vmeAddr += chanAddr[addr];
   }
   vmeAddr += it->second;
-  int err = vme_A16D32_read( fd_, vmeAddr, &vmeData );
-  if ( err ) {
+
+  try {
+    vmeData = _vme->readRegisterA16D32( _base, vmeAddr );
+  } catch( VmeException &e ){
     epicsSnprintf( pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                   "%s:%s: function=%d Could not read from VMEbus: %s",
-                   driverName, functionName, function, strerror( errno ) );
+                   "%s:%s: function=%d %s",
+                   driverName, functionName, function, e.what() );
     return asynError;
   }
-  status = (asynStatus) setUIntDigitalParam( addr, function, vmeData, mask );
 
+  status = (asynStatus) setUIntDigitalParam( addr, function, vmeData, mask );
   status = (asynStatus) getUIntDigitalParam( addr, function, value, mask );
+  pasynUser->timestamp = timeStamp;
   if( status ) 
     epicsSnprintf( pasynUser->errorMessage, pasynUser->errorMessageSize, 
                    "%s:%s: status=%d, function=%d, value=%d",
@@ -129,10 +131,12 @@ asynStatus drvAsynIsegVds::readUInt32Digital( asynUser *pasynUser, epicsUInt32 *
 //!          in pasynUser->errorMessage.
 //------------------------------------------------------------------------------
 asynStatus drvAsynIsegVds::writeUInt32Digital( asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask ){
+  static const char* functionName = "writeUInt32Digital";
   int function = pasynUser->reason;
   int addr = 0;
+  epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
   asynStatus status = asynSuccess;
-  const char* functionName = "writeUInt32Digital";
+  epicsUInt32 vmeAddr = 0;
 
   // Return if function is a read-only parameter
   if ( function == P_ModStatus   || \
@@ -141,20 +145,20 @@ asynStatus drvAsynIsegVds::writeUInt32Digital( asynUser *pasynUser, epicsUInt32 
   
   status = getAddress( pasynUser, &addr ); if( status != asynSuccess ) return status;
 
-
-  epicsUInt32 vmeAddr = base_;
-  cmdIter it = modcmds_.find( function );
-  if( modcmds_.end() == it ) {
-    it = chancmds_.find( function );
-    if( chancmds_.end() == it ) return asynError;
+  cmdIter it = _modcmds.find( function );
+  if( _modcmds.end() == it ) {
+    it = _chancmds.find( function );
+    if( _chancmds.end() == it ) return asynError;
     vmeAddr += chanAddr[addr];
   }
   vmeAddr += it->second;
-  int err = vme_A16D32_write( fd_, vmeAddr, value );
-  if ( err ) {
+
+  try{
+    _vme->writeRegisterA16D32( _base, vmeAddr, value );
+  } catch( VmeException &e ){
     epicsSnprintf( pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                   "%s:%s: function=%d Could not write to VMEbus: %s",
-                   driverName, functionName, function, strerror( errno ) );
+                   "%s:%s: function=%d %s",
+                   driverName, functionName, function, e.what() );
     return asynError;
   }
 
@@ -165,7 +169,7 @@ asynStatus drvAsynIsegVds::writeUInt32Digital( asynUser *pasynUser, epicsUInt32 
   if( status ) 
     epicsSnprintf( pasynUser->errorMessage, pasynUser->errorMessageSize, 
                    "%s:%s:%s: status=%d, function=%d, value=%d", 
-                   driverName, deviceName_, functionName, status, function, value );
+                   driverName, _deviceName, functionName, status, function, value );
   else        
     asynPrint( pasynUser, ASYN_TRACEIO_DEVICE, 
                "%s:%s: function=%d, value=%d\n", 
@@ -185,37 +189,38 @@ asynStatus drvAsynIsegVds::writeUInt32Digital( asynUser *pasynUser, epicsUInt32 
 //!          in pasynUser->errorMessage.
 //------------------------------------------------------------------------------
 asynStatus drvAsynIsegVds::readFloat64( asynUser *pasynUser, epicsFloat64 *value ) {
+  static const char *functionName = "readFloat64";
   int function = pasynUser->reason;
   int addr = 0;
   asynStatus status = asynSuccess;
   epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
-  static const char *functionName = "readFloat64";
+  epicsUInt32 vmeAddr = 0;
+  float_t data;
   
   status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
 
-  epicsUInt32 vmeData = 0;
-  epicsUInt32 vmeAddr = base_;
-  cmdIter it = modcmds_.find( function );
-  if( modcmds_.end() == it ) {
-    it = chancmds_.find( function );
-    if( chancmds_.end() == it ) return asynError;
+  cmdIter it = _modcmds.find( function );
+  if( _modcmds.end() == it ) {
+    it = _chancmds.find( function );
+    if( _chancmds.end() == it ) return asynError;
     vmeAddr += chanAddr[addr];
   }
   vmeAddr += it->second;
-  int err = vme_A16D32_read( fd_, vmeAddr, &vmeData );
-  if ( err ) {
+
+  try {
+    epicsUInt32 vmeData = _vme->readRegisterA16D32( _base, vmeAddr );
+    data.ival = vmeData;
+  } catch( VmeException &e ){
     epicsSnprintf( pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                   "%s:%s: function=%d Could not read from VMEbus: %s",
-                   driverName, functionName, function, strerror( errno ) );
+                   "%s:%s: function=%d %s",
+                   driverName, functionName, function, e.what() );
     return asynError;
   }
-  float_t data; data.ival = vmeData;
+
   // convert current from A to uA
   if ( function == P_ChanImom || function == P_ChanIset ) data.fval *= 1.e6;
 
   status = setDoubleParam( addr, function, data.fval );
-
-
   status = (asynStatus) getDoubleParam(addr, function, value);
   pasynUser->timestamp = timeStamp;
   if (status) 
@@ -240,10 +245,12 @@ asynStatus drvAsynIsegVds::readFloat64( asynUser *pasynUser, epicsFloat64 *value
 //!          in pasynUser->errorMessage.
 //------------------------------------------------------------------------------
 asynStatus drvAsynIsegVds::writeFloat64( asynUser *pasynUser, epicsFloat64 value ) {
+  static const char *functionName = "writeFloat64";
   int function = pasynUser->reason;
   asynStatus status = asynSuccess;
   int addr = 0;
-  const char *functionName = "writeFloat64";
+  epicsUInt32 vmeAddr = 0;
+  float_t vmeData; vmeData.fval = (epicsFloat32)value;
 
   // Return if function is a read-only parameter
   if ( function == P_VMax        || \
@@ -258,22 +265,23 @@ asynStatus drvAsynIsegVds::writeFloat64( asynUser *pasynUser, epicsFloat64 value
 
   status = getAddress( pasynUser, &addr ); if ( status != asynSuccess ) return status;
 
-  float_t vmeData; vmeData.fval = (epicsFloat32)value;
   // convert current from A to uA
   if ( function == P_ChanIset ) vmeData.fval *= 1.e-6;
-  epicsUInt32 vmeAddr = base_;
-  cmdIter it = modcmds_.find( function );
-  if( modcmds_.end() == it ) {
-    it = chancmds_.find( function );
-    if( chancmds_.end() == it ) return asynError;
+
+  cmdIter it = _modcmds.find( function );
+  if( _modcmds.end() == it ) {
+    it = _chancmds.find( function );
+    if( _chancmds.end() == it ) return asynError;
     vmeAddr += chanAddr[addr];
   }
   vmeAddr += it->second;
-  int err = vme_A16D32_write( fd_, vmeAddr, vmeData.ival );
-  if ( err ) {
+
+  try{
+    _vme->writeRegisterA16D32( _base, vmeAddr, vmeData.ival );
+  } catch( VmeException &e ){
     epicsSnprintf( pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                   "%s:%s: function=%d Could not write to VMEbus: %s",
-                   driverName, functionName, function, strerror( errno ) );
+                   "%s:%s: function=%d %s",
+                   driverName, functionName, function, e.what() );
     return asynError;
   }
 
@@ -295,10 +303,9 @@ asynStatus drvAsynIsegVds::writeFloat64( asynUser *pasynUser, epicsFloat64 value
 //!          Calls constructor for the asynPortDriver base class.
 //!
 //! @param   [in]  portName    The name of the asynPortDriver to be created.
-//! @param   [in]  vmedev      The name of the VME crate on the device file system
 //! @param   [in]  BA          The base address
 //------------------------------------------------------------------------------
-drvAsynIsegVds::drvAsynIsegVds( const char *portName, const char *vmedev, const int BA ) 
+drvAsynIsegVds::drvAsynIsegVds( const char *portName, const int BA ) 
   : asynPortDriver( portName, 
                     8, // maxAddr
                     NUM_ISEGVDS_PARAMS,
@@ -309,15 +316,14 @@ drvAsynIsegVds::drvAsynIsegVds( const char *portName, const char *vmedev, const 
                     0, // Default priority
                     0 ) // Default stack size
 {
-  const char *functionName = "drvAsynIsegVds";
+  static const char *functionName = "drvAsynIsegVds";
   
-  deviceName_  = epicsStrDup( portName );
-  base_        = BA;
-  
-  fd_ = open( vmedev, O_RDWR, 0 );
-  if( 0 > fd_ ) {
-    fprintf( stderr, "\033[31;1m %s:%s: Could not open interface '%s'. %s \033[0m \n",
-             driverName, functionName, vmedev, strerror( errno ) );
+  _deviceName = epicsStrDup( portName );
+  _base       = BA;
+  _vme        = VmeMaster::getInstance(); 
+  if( !_vme ) {
+    fprintf( stderr, "\033[31;1m %s:%s: Could not find VmeMastet. \033[0m \n",
+             driverName, functionName );
     return;
   }
 
@@ -350,33 +356,33 @@ drvAsynIsegVds::drvAsynIsegVds( const char *portName, const char *vmedev, const 
   createParam( P_ISEGVDS_CHANVBOUNDS_STRING,       asynParamFloat64,       &P_ChanVBounds );
   createParam( P_ISEGVDS_CHANIBOUNDS_STRING,       asynParamFloat64,       &P_ChanIBounds );
 
-  modcmds_.insert( std::make_pair( P_ModStatus,         0x0000 ) );
-  modcmds_.insert( std::make_pair( P_ModEvtStatus,      0x0004 ) );
-  modcmds_.insert( std::make_pair( P_ModEvtMask,        0x0008 ) );
-  modcmds_.insert( std::make_pair( P_ModCtrl,           0x000c ) );
-  modcmds_.insert( std::make_pair( P_ModEvtChanStatus,  0x0010 ) );
-  modcmds_.insert( std::make_pair( P_ModEvtChanMask,    0x0014 ) );
-  modcmds_.insert( std::make_pair( P_ModEvtGrpStatus,   0x0018 ) );
-  modcmds_.insert( std::make_pair( P_ModEvtGrpMask,     0x001c ) );
-  modcmds_.insert( std::make_pair( P_VRamp,             0x0020 ) );
-  modcmds_.insert( std::make_pair( P_CRamp,             0x0024 ) );
-  modcmds_.insert( std::make_pair( P_VMax,              0x0028 ) );
-  modcmds_.insert( std::make_pair( P_IMax,              0x002c ) );
-  modcmds_.insert( std::make_pair( P_SupplyP5,          0x0040 ) );
-  modcmds_.insert( std::make_pair( P_SupplyP12,         0x0044 ) );
-  modcmds_.insert( std::make_pair( P_SupplyN12,         0x0048 ) );
-  modcmds_.insert( std::make_pair( P_Temperature,       0x004c ) );
+  _modcmds.insert( std::make_pair( P_ModStatus,         0x0000 ) );
+  _modcmds.insert( std::make_pair( P_ModEvtStatus,      0x0004 ) );
+  _modcmds.insert( std::make_pair( P_ModEvtMask,        0x0008 ) );
+  _modcmds.insert( std::make_pair( P_ModCtrl,           0x000c ) );
+  _modcmds.insert( std::make_pair( P_ModEvtChanStatus,  0x0010 ) );
+  _modcmds.insert( std::make_pair( P_ModEvtChanMask,    0x0014 ) );
+  _modcmds.insert( std::make_pair( P_ModEvtGrpStatus,   0x0018 ) );
+  _modcmds.insert( std::make_pair( P_ModEvtGrpMask,     0x001c ) );
+  _modcmds.insert( std::make_pair( P_VRamp,             0x0020 ) );
+  _modcmds.insert( std::make_pair( P_CRamp,             0x0024 ) );
+  _modcmds.insert( std::make_pair( P_VMax,              0x0028 ) );
+  _modcmds.insert( std::make_pair( P_IMax,              0x002c ) );
+  _modcmds.insert( std::make_pair( P_SupplyP5,          0x0040 ) );
+  _modcmds.insert( std::make_pair( P_SupplyP12,         0x0044 ) );
+  _modcmds.insert( std::make_pair( P_SupplyN12,         0x0048 ) );
+  _modcmds.insert( std::make_pair( P_Temperature,       0x004c ) );
 
-  chancmds_.insert( std::make_pair( P_ChanStatus,        0x0000 ) );
-  chancmds_.insert( std::make_pair( P_ChanEvtStatus,     0x0004 ) );
-  chancmds_.insert( std::make_pair( P_ChanEvtMask,       0x0008 ) );
-  chancmds_.insert( std::make_pair( P_ChanCtrl,          0x000c ) );
-  chancmds_.insert( std::make_pair( P_ChanVset,          0x0010 ) );
-  chancmds_.insert( std::make_pair( P_ChanIset,          0x0014 ) );
-  chancmds_.insert( std::make_pair( P_ChanVmom,          0x0018 ) );
-  chancmds_.insert( std::make_pair( P_ChanImom,          0x001c ) );
-  chancmds_.insert( std::make_pair( P_ChanVBounds,       0x0020 ) );
-  chancmds_.insert( std::make_pair( P_ChanIBounds,       0x0024 ) );
+  _chancmds.insert( std::make_pair( P_ChanStatus,        0x0000 ) );
+  _chancmds.insert( std::make_pair( P_ChanEvtStatus,     0x0004 ) );
+  _chancmds.insert( std::make_pair( P_ChanEvtMask,       0x0008 ) );
+  _chancmds.insert( std::make_pair( P_ChanCtrl,          0x000c ) );
+  _chancmds.insert( std::make_pair( P_ChanVset,          0x0010 ) );
+  _chancmds.insert( std::make_pair( P_ChanIset,          0x0014 ) );
+  _chancmds.insert( std::make_pair( P_ChanVmom,          0x0018 ) );
+  _chancmds.insert( std::make_pair( P_ChanImom,          0x001c ) );
+  _chancmds.insert( std::make_pair( P_ChanVBounds,       0x0020 ) );
+  _chancmds.insert( std::make_pair( P_ChanIBounds,       0x0024 ) );
 
 }
 
@@ -388,20 +394,18 @@ extern "C" {
   //!          for the drvAsynIsegVds class.
   //!
   //! @param  [in]  portName The name of the asyn port driver to be created.
-  //! @param  [in]  vmedev   The name of the VME crate on the device file system
   //! @param  [in]  BA       RAM Base address of the ISEG VDS module
   //----------------------------------------------------------------------------
-  int drvAsynIsegVdsConfigure( const char *portName, const char *vmedev, const int BA ) {
-    new drvAsynIsegVds( portName, vmedev, BA );
+  int drvAsynIsegVdsConfigure( const char *portName, const int BA ) {
+    new drvAsynIsegVds( portName, BA );
     return( asynSuccess );
   }
   static const iocshArg initIsegVdsArg0 = { "portName", iocshArgString };
-  static const iocshArg initIsegVdsArg1 = { "vmedev",   iocshArgString };
-  static const iocshArg initIsegVdsArg2 = { "BA",       iocshArgInt };
-  static const iocshArg * const initIsegVdsArgs[] = { &initIsegVdsArg0, &initIsegVdsArg1, &initIsegVdsArg2 };
-  static const iocshFuncDef initIsegVdsFuncDef = { "drvAsynIsegVdsConfigure", 3, initIsegVdsArgs };
+  static const iocshArg initIsegVdsArg1 = { "BA",       iocshArgInt };
+  static const iocshArg * const initIsegVdsArgs[] = { &initIsegVdsArg0, &initIsegVdsArg1 };
+  static const iocshFuncDef initIsegVdsFuncDef = { "drvAsynIsegVdsConfigure", 2, initIsegVdsArgs };
   static void initIsegVdsCallFunc( const iocshArgBuf *args ) {
-    drvAsynIsegVdsConfigure( args[0].sval, args[1].sval, args[2].ival );
+    drvAsynIsegVdsConfigure( args[0].sval, args[1].ival );
   }
   
   //----------------------------------------------------------------------------
